@@ -222,8 +222,8 @@ function ResultCard({
 }
 
 export default function PeptideCalculator() {
-  const [vialMg, setVialMg] = useState("10");
-  const [waterMl, setWaterMl] = useState("2");
+  const [vialMg, setVialMg] = useState("");
+  const [waterMl, setWaterMl] = useState("");
   const [syringe, setSyringe] = useState<SyringeType>("U-100");
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState<DoseUnit>("mcg");
@@ -297,7 +297,7 @@ export default function PeptideCalculator() {
                   value={waterMl}
                   onChange={setWaterMl}
                   unit="ml"
-                  placeholder="2"
+                  placeholder="Example: 2"
                 />
                 <NumericInput
                   label="Vial Peptide Amount"
@@ -305,7 +305,7 @@ export default function PeptideCalculator() {
                   value={vialMg}
                   onChange={setVialMg}
                   unit="mg"
-                  placeholder="5"
+                  placeholder="Example: 10"
                 />
 
                 {/* Syringe type */}
