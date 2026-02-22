@@ -542,6 +542,7 @@ export default function PeptideCalculator() {
             For informational purposes only. Always verify calculations before use.
             Consult a healthcare professional for medical guidance.
           </p>
+          <p className="mt-2 text-center text-xs text-slate-700">v1.0.0</p>
         </main>
       </div>
 
