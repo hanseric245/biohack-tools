@@ -329,7 +329,7 @@ export default function PeptideCalculator() {
             <span className="text-cyan-400">Calculator</span>
           </h1>
           <p className="mt-4 text-slate-400 text-base sm:text-lg leading-relaxed">
-            Enter your vial specs and prescribed dose — we'll tell you exactly
+            Enter your vial specs and prescribed dose — we&apos;ll tell you exactly
             how to prepare and draw it.
           </p>
         </header>
