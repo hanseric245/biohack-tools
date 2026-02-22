@@ -1,6 +1,42 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+
+const PEPTIDES = [
+  "AOD-9604",
+  "BPC-157",
+  "Cerebrolysin",
+  "CJC-1295",
+  "CJC-1295 (no DAC)",
+  "Dihexa",
+  "Epithalon",
+  "GHK-Cu",
+  "GHRP-2",
+  "GHRP-6",
+  "GLP-1",
+  "Hexarelin",
+  "HGH Fragment 176-191",
+  "Humanin",
+  "Ipamorelin",
+  "KPV",
+  "LL-37",
+  "Melanotan II",
+  "MGF (Mechano Growth Factor)",
+  "NAD+",
+  "Oxytocin",
+  "Pinealon",
+  "PT-141",
+  "Selank",
+  "Semaglutide",
+  "Semax",
+  "Sermorelin",
+  "SS-31",
+  "TB-500",
+  "Tesamorelin",
+  "Thymalin",
+  "Thymosin Alpha-1",
+  "Tirzepatide",
+];
 
 type DoseUnit = "mcg" | "mg";
 type SyringeType = "U-100" | "U-50" | "U-40";
@@ -41,6 +77,58 @@ function compute(
   const summary = `Draw to the ${unitsDisplay} unit mark on your ${syringe} syringe.`;
 
   return { concentration, volumeMl, syringeUnits, summary };
+}
+
+function PeptideCombobox({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filtered = useMemo(() => {
+    if (!value.trim()) return PEPTIDES;
+    return PEPTIDES.filter((p) =>
+      p.toLowerCase().includes(value.toLowerCase())
+    );
+  }, [value]);
+
+  return (
+    <div className="relative">
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="e.g. BPC-157 — or type any name"
+        className="
+          w-full bg-[#081322] border border-[#1a3050] rounded-xl
+          px-5 py-4 text-slate-100 text-xl
+          placeholder:text-slate-600
+          focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
+          transition-colors duration-150
+        "
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#0a1628] border border-[#1e3a5f] rounded-xl overflow-hidden z-50 shadow-2xl max-h-64 overflow-y-auto">
+          {filtered.map((p) => (
+            <button
+              key={p}
+              onMouseDown={() => { onChange(p); setOpen(false); }}
+              className="w-full text-left px-5 py-3 text-lg text-slate-300 hover:bg-cyan-400/10 hover:text-cyan-400 transition-colors duration-100 border-b border-[#1a3050] last:border-0"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Field({
@@ -198,21 +286,9 @@ export default function PeptideCalculator() {
                 {/* Peptide name */}
                 <Field
                   label="Peptide Name"
-                  hint="Optional. Names your printed reference card — e.g. BPC-157, TB-500."
+                  hint="Start typing to search, or enter any custom name. Used to label your printed reference card."
                 >
-                  <input
-                    type="text"
-                    value={calcName}
-                    onChange={(e) => setCalcName(e.target.value)}
-                    placeholder="e.g. BPC-157"
-                    className="
-                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
-                      px-5 py-4 text-slate-100 text-xl
-                      placeholder:text-slate-600
-                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
-                      transition-colors duration-150
-                    "
-                  />
+                  <PeptideCombobox value={calcName} onChange={setCalcName} />
                 </Field>
 
                 <NumericInput
