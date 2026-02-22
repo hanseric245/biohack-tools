@@ -190,20 +190,20 @@ export default function PeptideCalculator() {
 
             <div className="flex flex-col gap-6">
               <NumericInput
-                label="Vial Peptide Amount"
-                hint="mg = milligrams — the total peptide amount printed on your vial label (e.g. 5mg, 10mg)."
-                value={vialMg}
-                onChange={setVialMg}
-                unit="mg"
-                placeholder="5"
-              />
-              <NumericInput
                 label="Bacteriostatic Water Added"
                 hint="ml = milliliters, same as cc. How much bacteriostatic water you inject into the vial."
                 value={waterMl}
                 onChange={setWaterMl}
                 unit="ml"
                 placeholder="2"
+              />
+              <NumericInput
+                label="Vial Peptide Amount"
+                hint="mg = milligrams — the total peptide amount printed on your vial label (e.g. 5mg, 10mg)."
+                value={vialMg}
+                onChange={setVialMg}
+                unit="mg"
+                placeholder="5"
               />
 
               {/* Syringe type */}
