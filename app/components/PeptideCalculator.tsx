@@ -73,7 +73,8 @@ type DoseUnit = "mcg" | "mg";
 type SyringeType = "U-100" | "U-50" | "U-40";
 
 interface Results {
-  recommendedBW: number;
+  bwUsed: number;
+  bwOverridden: boolean;
   concentration: number;
   volumeMl: number;
   syringeUnits: number;
@@ -89,29 +90,38 @@ function computeRecommended(
   vialMg: number,
   doseMg: number,
   syringe: SyringeType,
-  dosesPerWeek: number | null
+  dosesPerWeek: number | null,
+  bwOverride: number | null
 ): Results | null {
   if (!vialMg || !doseMg || vialMg <= 0 || doseMg <= 0 || doseMg > vialMg) return null;
 
   const unitsPerMl = SYRINGE_UNITS[syringe];
-  const BW_OPTIONS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5];
 
-  let bestBW = 2;
-  let bestScore = Infinity;
+  let bwUsed: number;
+  let bwOverridden = false;
 
-  for (const bw of BW_OPTIONS) {
-    const concentration = vialMg / bw;
-    const volumeMl = doseMg / concentration;
-    const units = volumeMl * unitsPerMl;
-    if (units < 2 || units > 100) continue;
-    const score = Math.abs(units - Math.round(units / 5) * 5);
-    if (score < bestScore) {
-      bestScore = score;
-      bestBW = bw;
+  if (bwOverride && bwOverride > 0) {
+    bwUsed = bwOverride;
+    bwOverridden = true;
+  } else {
+    const BW_OPTIONS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5];
+    let bestBW = 2;
+    let bestScore = Infinity;
+    for (const bw of BW_OPTIONS) {
+      const concentration = vialMg / bw;
+      const volumeMl = doseMg / concentration;
+      const units = volumeMl * unitsPerMl;
+      if (units < 2 || units > 100) continue;
+      const score = Math.abs(units - Math.round(units / 5) * 5);
+      if (score < bestScore) {
+        bestScore = score;
+        bestBW = bw;
+      }
     }
+    bwUsed = bestBW;
   }
 
-  const concentration = vialMg / bestBW;
+  const concentration = vialMg / bwUsed;
   const volumeMl = doseMg / concentration;
   const syringeUnits = volumeMl * unitsPerMl;
   const totalDoses = vialMg / doseMg;
@@ -130,12 +140,15 @@ function computeRecommended(
   const unitsDisplay =
     syringeUnits % 1 === 0 ? syringeUnits.toFixed(0) : syringeUnits.toFixed(1);
 
-  const reconstitution = `Add ${bestBW}ml of bacteriostatic water to the vial to dissolve the peptide. Do this once when you first open the vial.`;
+  const reconstitution = bwOverridden
+    ? `Your vial was reconstituted with ${bwUsed}ml of bacteriostatic water.`
+    : `Add ${bwUsed}ml of bacteriostatic water to the vial to dissolve the peptide. Do this once when you first open the vial.`;
   const drawInstruction = `Draw to the ${unitsDisplay} unit mark on your ${syringe} syringe each time you dose.`;
   const summary = `${reconstitution} ${drawInstruction}`;
 
   return {
-    recommendedBW: bestBW,
+    bwUsed,
+    bwOverridden,
     concentration,
     volumeMl,
     syringeUnits,
@@ -297,6 +310,7 @@ export default function PeptideCalculator() {
   const [doseUnit, setDoseUnit] = useState<DoseUnit>("mg");
   const [frequency, setFrequency] = useState("");
   const [syringe, setSyringe] = useState<SyringeType>("U-100");
+  const [bwOverride, setBwOverride] = useState("");
 
   const doseMg = useMemo(
     () => (doseUnit === "mcg" ? parseFloat(dose) / 1000 : parseFloat(dose)),
@@ -314,9 +328,10 @@ export default function PeptideCalculator() {
         parseFloat(vialMg),
         doseMg,
         syringe,
-        selectedFreq?.dosesPerWeek ?? null
+        selectedFreq?.dosesPerWeek ?? null,
+        parseFloat(bwOverride) || null
       ),
-    [vialMg, doseMg, syringe, selectedFreq]
+    [vialMg, doseMg, syringe, selectedFreq, bwOverride]
   );
 
   const hasResults = results !== null;
@@ -368,6 +383,7 @@ export default function PeptideCalculator() {
                       setDoseUnit("mg");
                       setFrequency("");
                       setSyringe("U-100");
+                      setBwOverride("");
                     }}
                     className="text-slate-600 hover:text-slate-300 transition-colors duration-150 p-1"
                     aria-label="Start over"
@@ -487,6 +503,16 @@ export default function PeptideCalculator() {
                     <option value="U-40">U-40 (40 units / ml)</option>
                   </select>
                 </Field>
+
+                {/* BW override */}
+                <NumericInput
+                  label="Bacteriostatic Water Used (optional)"
+                  hint="Already reconstituted your vial, or given a specific amount to use? Enter it here and we'll calculate your draw from that instead."
+                  value={bwOverride}
+                  onChange={setBwOverride}
+                  unit="ml"
+                  placeholder="Leave blank to use our recommendation"
+                />
               </div>
             </div>
 
@@ -535,8 +561,9 @@ export default function PeptideCalculator() {
                   {/* Supporting cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <ResultCard
-                      label="Add BW"
-                      value={`${results.recommendedBW} ml`}
+                      label={results.bwOverridden ? "BW Used" : "Add BW"}
+                      value={`${results.bwUsed} ml`}
+                      sub={results.bwOverridden ? "your amount" : "recommended"}
                     />
                     <ResultCard
                       label="Doses / Vial"
@@ -641,7 +668,7 @@ export default function PeptideCalculator() {
 
             <div className="grid grid-cols-3 gap-3 text-sm">
               {[
-                ["Bacteriostatic Water", `${results!.recommendedBW} ml`],
+                [results!.bwOverridden ? "Bacteriostatic Water Used" : "Bacteriostatic Water (recommended)", `${results!.bwUsed} ml`],
                 ["Doses per Vial", Number.isInteger(results!.totalDoses) ? String(results!.totalDoses) : results!.totalDoses.toFixed(1)],
                 ...(results!.supplyLabel ? [["Supply Duration", results!.supplyLabel]] : [["Concentration", `${results!.concentration.toFixed(2)} mg/ml`]]),
               ].map(([label, value]) => (
