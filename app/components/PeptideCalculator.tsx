@@ -520,7 +520,17 @@ export default function PeptideCalculator() {
 
                   {/* Print button */}
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => {
+                      const peptidePart = calcName
+                        ? calcName.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_\-]/g, "")
+                        : "peptide";
+                      const dosePart = dose ? `${dose}${doseUnit}` : "dose";
+                      const filename = `${peptidePart}_${dosePart}_dose`;
+                      const prev = document.title;
+                      document.title = filename;
+                      window.print();
+                      document.title = prev;
+                    }}
                     className="
                       mt-2 w-full flex items-center justify-center gap-2
                       border border-slate-600 hover:border-cyan-400 hover:text-cyan-400
