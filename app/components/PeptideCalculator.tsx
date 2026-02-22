@@ -162,8 +162,6 @@ export default function PeptideCalculator() {
           <span className="text-cyan-400 font-mono text-sm tracking-widest uppercase font-semibold">
             biohack.tools
           </span>
-          <span className="w-px h-3 bg-slate-600" />
-          <span className="text-slate-500 text-sm">POC</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold text-slate-100 tracking-tight leading-tight">
           Peptide Dosage
