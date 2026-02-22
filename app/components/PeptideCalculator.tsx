@@ -338,11 +338,34 @@ export default function PeptideCalculator() {
           <div className="bg-[#0c1a2e] border border-[#1a3050] rounded-2xl">
             {/* Inputs */}
             <div className="p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-7">
-                <div className="w-1 h-5 bg-cyan-400 rounded-full" />
-                <h2 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">
-                  Inputs
-                </h2>
+              <div className="flex items-center justify-between mb-7">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-5 bg-cyan-400 rounded-full" />
+                  <h2 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">
+                    Inputs
+                  </h2>
+                </div>
+                <div className="relative group">
+                  <button
+                    onClick={() => {
+                      setCalcName("");
+                      setVialMg("");
+                      setDose("");
+                      setDoseUnit("mg");
+                      setFrequency("");
+                      setSyringe("U-100");
+                    }}
+                    className="text-slate-600 hover:text-slate-300 transition-colors duration-150 p-1"
+                    aria-label="Start over"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                  <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-[#070f20] border border-[#1e3a5f] rounded text-xs text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                    Start over
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col gap-6">
