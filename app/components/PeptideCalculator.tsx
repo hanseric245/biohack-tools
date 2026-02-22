@@ -256,7 +256,7 @@ export default function PeptideCalculator() {
                     type="number"
                     value={dose}
                     onChange={(e) => setDose(e.target.value)}
-                    placeholder="250"
+                    placeholder="Example: 250. Enter your amount here."
                     min="0"
                     step="any"
                     className="
