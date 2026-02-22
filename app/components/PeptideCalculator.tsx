@@ -166,7 +166,7 @@ export default function PeptideCalculator() {
           <span className="text-slate-500 text-sm">POC</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold text-slate-100 tracking-tight leading-tight">
-          Peptide Reconstitution
+          Peptide Dosage
           <br />
           <span className="text-cyan-400">Calculator</span>
         </h1>
