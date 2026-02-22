@@ -38,45 +38,100 @@ const PEPTIDES = [
   "Tirzepatide",
 ];
 
-type DoseUnit = "mcg" | "mg";
-type SyringeType = "U-100" | "U-50" | "U-40";
+const FREQUENCIES: { label: string; dosesPerWeek: number }[] = [
+  { label: "Once daily", dosesPerWeek: 7 },
+  { label: "Twice daily", dosesPerWeek: 14 },
+  { label: "Every other day (EOD)", dosesPerWeek: 3.5 },
+  { label: "3× per week", dosesPerWeek: 3 },
+  { label: "Twice weekly", dosesPerWeek: 2 },
+  { label: "Once weekly", dosesPerWeek: 1 },
+  { label: "Twice monthly", dosesPerWeek: 0.5 },
+  { label: "Once monthly", dosesPerWeek: 0.25 },
+];
 
-const SYRINGE_UNITS: Record<SyringeType, number> = {
+const SYRINGE_UNITS: Record<string, number> = {
   "U-100": 100,
   "U-50": 50,
   "U-40": 40,
 };
 
+type DoseUnit = "mcg" | "mg";
+type SyringeType = "U-100" | "U-50" | "U-40";
+
 interface Results {
+  recommendedBW: number;
   concentration: number;
   volumeMl: number;
   syringeUnits: number;
+  totalDoses: number;
+  supplyLabel: string | null;
+  frequencyLabel: string | null;
+  reconstitution: string;
+  drawInstruction: string;
   summary: string;
 }
 
-function compute(
+function computeRecommended(
   vialMg: number,
-  waterMl: number,
+  doseMg: number,
   syringe: SyringeType,
-  dose: number,
-  doseUnit: DoseUnit
+  dosesPerWeek: number | null
 ): Results | null {
-  if (!vialMg || !waterMl || !dose || vialMg <= 0 || waterMl <= 0 || dose <= 0) return null;
+  if (!vialMg || !doseMg || vialMg <= 0 || doseMg <= 0 || doseMg > vialMg) return null;
 
-  const doseMg = doseUnit === "mcg" ? dose / 1000 : dose;
-  const concentration = vialMg / waterMl;
-  const volumeMl = doseMg / concentration;
   const unitsPerMl = SYRINGE_UNITS[syringe];
+  const BW_OPTIONS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5];
+
+  let bestBW = 2;
+  let bestScore = Infinity;
+
+  for (const bw of BW_OPTIONS) {
+    const concentration = vialMg / bw;
+    const volumeMl = doseMg / concentration;
+    const units = volumeMl * unitsPerMl;
+    if (units < 2 || units > 100) continue;
+    const score = Math.abs(units - Math.round(units / 5) * 5);
+    if (score < bestScore) {
+      bestScore = score;
+      bestBW = bw;
+    }
+  }
+
+  const concentration = vialMg / bestBW;
+  const volumeMl = doseMg / concentration;
   const syringeUnits = volumeMl * unitsPerMl;
+  const totalDoses = vialMg / doseMg;
+
+  let supplyLabel: string | null = null;
+  let frequencyLabel: string | null = null;
+  if (dosesPerWeek) {
+    const match = FREQUENCIES.find((f) => f.dosesPerWeek === dosesPerWeek);
+    frequencyLabel = match?.label ?? null;
+    const totalDays = (totalDoses / dosesPerWeek) * 7;
+    if (totalDays < 14) supplyLabel = `${Math.round(totalDays)} days`;
+    else if (totalDays < 60) supplyLabel = `${Math.round(totalDays / 7)} weeks`;
+    else supplyLabel = `~${(totalDays / 30).toFixed(1)} months`;
+  }
 
   const unitsDisplay =
-    syringeUnits % 1 === 0
-      ? syringeUnits.toFixed(0)
-      : syringeUnits.toFixed(1);
+    syringeUnits % 1 === 0 ? syringeUnits.toFixed(0) : syringeUnits.toFixed(1);
 
-  const summary = `Draw to the ${unitsDisplay} unit mark on your ${syringe} syringe.`;
+  const reconstitution = `Add ${bestBW}ml of bacteriostatic water to the vial to dissolve the peptide. Do this once when you first open the vial.`;
+  const drawInstruction = `Draw to the ${unitsDisplay} unit mark on your ${syringe} syringe each time you dose.`;
+  const summary = `${reconstitution} ${drawInstruction}`;
 
-  return { concentration, volumeMl, syringeUnits, summary };
+  return {
+    recommendedBW: bestBW,
+    concentration,
+    volumeMl,
+    syringeUnits,
+    totalDoses,
+    supplyLabel,
+    frequencyLabel,
+    reconstitution,
+    drawInstruction,
+    summary,
+  };
 }
 
 function PeptideCombobox({
@@ -222,23 +277,32 @@ function ResultCard({
 }
 
 export default function PeptideCalculator() {
-  const [vialMg, setVialMg] = useState("");
-  const [waterMl, setWaterMl] = useState("");
-  const [syringe, setSyringe] = useState<SyringeType>("U-100");
-  const [dose, setDose] = useState("");
-  const [doseUnit, setDoseUnit] = useState<DoseUnit>("mcg");
   const [calcName, setCalcName] = useState("");
+  const [vialMg, setVialMg] = useState("");
+  const [dose, setDose] = useState("");
+  const [doseUnit, setDoseUnit] = useState<DoseUnit>("mg");
+  const [frequency, setFrequency] = useState("");
+  const [syringe, setSyringe] = useState<SyringeType>("U-100");
+
+  const doseMg = useMemo(
+    () => (doseUnit === "mcg" ? parseFloat(dose) / 1000 : parseFloat(dose)),
+    [dose, doseUnit]
+  );
+
+  const selectedFreq = useMemo(
+    () => FREQUENCIES.find((f) => String(f.dosesPerWeek) === frequency) ?? null,
+    [frequency]
+  );
 
   const results = useMemo(
     () =>
-      compute(
+      computeRecommended(
         parseFloat(vialMg),
-        parseFloat(waterMl),
+        doseMg,
         syringe,
-        parseFloat(dose),
-        doseUnit
+        selectedFreq?.dosesPerWeek ?? null
       ),
-    [vialMg, waterMl, syringe, dose, doseUnit]
+    [vialMg, doseMg, syringe, selectedFreq]
   );
 
   const hasResults = results !== null;
@@ -253,7 +317,6 @@ export default function PeptideCalculator() {
     <>
       {/* ── Screen UI ── */}
       <div className="min-h-screen bg-[#060c18] px-5 py-10 sm:py-16 print:hidden">
-        {/* Header */}
         <header className="max-w-2xl mx-auto mb-10">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-cyan-400 font-mono text-sm tracking-widest uppercase font-semibold">
@@ -266,14 +329,14 @@ export default function PeptideCalculator() {
             <span className="text-cyan-400">Calculator</span>
           </h1>
           <p className="mt-4 text-slate-400 text-base sm:text-lg leading-relaxed">
-            Enter your vial specs and intended dose to get the exact volume and
-            syringe unit mark.
+            Enter your vial specs and prescribed dose — we'll tell you exactly
+            how to prepare and draw it.
           </p>
         </header>
 
         <main className="max-w-2xl mx-auto">
           <div className="bg-[#0c1a2e] border border-[#1a3050] rounded-2xl">
-            {/* Inputs section */}
+            {/* Inputs */}
             <div className="p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-7">
                 <div className="w-1 h-5 bg-cyan-400 rounded-full" />
@@ -286,52 +349,24 @@ export default function PeptideCalculator() {
                 {/* Peptide name */}
                 <Field
                   label="Peptide Name"
-                  hint="Start typing to search, or enter any custom name. Used to label your printed reference card."
+                  hint="Start typing to search, or enter any custom name."
                 >
                   <PeptideCombobox value={calcName} onChange={setCalcName} />
                 </Field>
 
-                <NumericInput
-                  label="Bacteriostatic Water Added"
-                  hint="ml = milliliters, same as cc. How much bacteriostatic water you inject into the vial."
-                  value={waterMl}
-                  onChange={setWaterMl}
-                  unit="ml"
-                  placeholder="Example: 2"
-                />
+                {/* Vial amount */}
                 <NumericInput
                   label="Vial Peptide Amount"
-                  hint="mg = milligrams — the total peptide amount printed on your vial label (e.g. 5mg, 10mg)."
+                  hint="mg = milligrams — the total amount printed on your vial label (e.g. 5mg, 10mg)."
                   value={vialMg}
                   onChange={setVialMg}
                   unit="mg"
                   placeholder="Example: 10"
                 />
 
-                {/* Syringe type */}
+                {/* Prescribed dose */}
                 <Field
-                  label="Syringe Type"
-                  hint="U-100 is the standard insulin syringe — 100 units per ml. Most peptide users use U-100."
-                >
-                  <select
-                    value={syringe}
-                    onChange={(e) => setSyringe(e.target.value as SyringeType)}
-                    className="
-                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
-                      px-5 py-4 text-slate-100 text-xl
-                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
-                      transition-colors duration-150 cursor-pointer
-                    "
-                  >
-                    <option value="U-100">U-100 (100 units / ml)</option>
-                    <option value="U-50">U-50 (50 units / ml)</option>
-                    <option value="U-40">U-40 (40 units / ml)</option>
-                  </select>
-                </Field>
-
-                {/* Dose with unit toggle */}
-                <Field
-                  label="Intended Dose"
+                  label="Prescribed Dose"
                   hint="mcg = micrograms, mg = milligrams. 1mg = 1,000mcg. Most peptide doses are in mcg."
                 >
                   <div className="flex flex-col gap-2">
@@ -342,10 +377,9 @@ export default function PeptideCalculator() {
                           onClick={() => setDoseUnit(u)}
                           className={`
                             px-5 py-2.5 text-base font-mono font-medium transition-colors duration-150
-                            ${
-                              doseUnit === u
-                                ? "bg-cyan-400/10 text-cyan-400"
-                                : "text-slate-500 hover:text-slate-300"
+                            ${doseUnit === u
+                              ? "bg-cyan-400/10 text-cyan-400"
+                              : "text-slate-500 hover:text-slate-300"
                             }
                           `}
                         >
@@ -370,20 +404,62 @@ export default function PeptideCalculator() {
                     />
                   </div>
                 </Field>
+
+                {/* Frequency */}
+                <Field
+                  label="Dose Frequency"
+                  hint="Optional. Used to calculate how long your vial will last."
+                >
+                  <select
+                    value={frequency}
+                    onChange={(e) => setFrequency(e.target.value)}
+                    className="
+                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
+                      px-5 py-4 text-xl cursor-pointer
+                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
+                      transition-colors duration-150
+                    "
+                    style={{ color: frequency ? "#e2e8f0" : "#475569" }}
+                  >
+                    <option value="">Select frequency (optional)</option>
+                    {FREQUENCIES.map((f) => (
+                      <option key={f.dosesPerWeek} value={String(f.dosesPerWeek)}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                {/* Syringe type */}
+                <Field
+                  label="Syringe Type"
+                  hint="U-100 is the standard insulin syringe — 100 units per ml. Most peptide users use U-100."
+                >
+                  <select
+                    value={syringe}
+                    onChange={(e) => setSyringe(e.target.value as SyringeType)}
+                    className="
+                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
+                      px-5 py-4 text-slate-100 text-xl
+                      focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
+                      transition-colors duration-150 cursor-pointer
+                    "
+                  >
+                    <option value="U-100">U-100 (100 units / ml)</option>
+                    <option value="U-50">U-50 (50 units / ml)</option>
+                    <option value="U-40">U-40 (40 units / ml)</option>
+                  </select>
+                </Field>
               </div>
             </div>
 
             {/* Divider */}
             <div className="border-t border-[#1a3050]" />
 
-            {/* Results section */}
+            {/* Results */}
             <div className="p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-7">
-                <div
-                  className={`w-1 h-5 rounded-full transition-colors duration-300 ${
-                    hasResults ? "bg-cyan-400" : "bg-slate-600"
-                  }`}
-                />
+                <div className={`w-1 h-5 rounded-full transition-colors duration-300 ${hasResults ? "bg-cyan-400" : "bg-slate-600"}`} />
                 <h2 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">
                   Results
                 </h2>
@@ -392,47 +468,53 @@ export default function PeptideCalculator() {
               {!hasResults ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-3">
                   <div className="w-12 h-12 rounded-full border-2 border-[#1a3050] flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-slate-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
+                    <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="text-slate-500 text-base">
-                    Fill in all inputs to calculate
-                  </p>
+                  <p className="text-slate-500 text-base">Fill in vial amount and dose to calculate</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {/* Summary */}
-                  <div className="bg-cyan-400/10 border border-cyan-400/40 rounded-xl px-6 py-5">
-                    <p className="text-cyan-100 text-2xl leading-snug font-bold">
-                      {results.summary}
-                    </p>
+                  {/* Primary callout — two steps */}
+                  <div className="bg-cyan-400/10 border border-cyan-400/40 rounded-xl px-6 py-5 flex flex-col gap-4">
+                    <div className="flex gap-3 items-start">
+                      <span className="mt-1 shrink-0 w-6 h-6 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-xs font-semibold tracking-widest text-cyan-400/70 uppercase mb-1">Reconstitution — once per vial</p>
+                        <p className="text-cyan-100 text-xl leading-snug font-bold">{results.reconstitution}</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-cyan-400/20" />
+                    <div className="flex gap-3 items-start">
+                      <span className="mt-1 shrink-0 w-6 h-6 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-xs font-semibold tracking-widest text-cyan-400/70 uppercase mb-1">Dosing — each time you inject</p>
+                        <p className="text-cyan-100 text-xl leading-snug font-bold">{results.drawInstruction}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Supporting data */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {/* Supporting cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <ResultCard
+                      label="Add BW"
+                      value={`${results.recommendedBW} ml`}
+                    />
+                    <ResultCard
+                      label="Doses / Vial"
+                      value={Number.isInteger(results.totalDoses)
+                        ? String(results.totalDoses)
+                        : results.totalDoses.toFixed(1)}
+                    />
+                    <ResultCard
+                      label="Supply"
+                      value={results.supplyLabel ?? "—"}
+                      sub={results.frequencyLabel ?? "add frequency"}
+                    />
                     <ResultCard
                       label="Concentration"
-                      value={`${results.concentration.toFixed(4)} mg/ml`}
-                    />
-                    <ResultCard
-                      label="Draw Volume"
-                      value={`${results.volumeMl.toFixed(4)} ml`}
-                    />
-                    <ResultCard
-                      label="Syringe Units"
-                      value={`${results.syringeUnits.toFixed(1)}`}
-                      sub={`on ${syringe} syringe`}
+                      value={`${results.concentration.toFixed(2)} mg/ml`}
                     />
                   </div>
 
@@ -463,38 +545,31 @@ export default function PeptideCalculator() {
         </main>
       </div>
 
-      {/* ── Print card — hidden on screen, shown when printing ── */}
+      {/* ── Print card ── */}
       {hasResults && (
         <div className="hidden print:block p-10 font-sans text-black">
           <div className="border-2 border-black rounded-xl p-8 max-w-lg mx-auto">
-            {/* Header */}
             <div className="flex items-start justify-between mb-6 pb-4 border-b border-gray-300">
               <div>
-                <p className="text-xs font-bold tracking-widest uppercase text-gray-500">
-                  biohack.tools
-                </p>
+                <p className="text-xs font-bold tracking-widest uppercase text-gray-500">biohack.tools</p>
                 <p className="text-xs text-gray-400">Peptide Dosage Calculator</p>
               </div>
               <p className="text-xs text-gray-400">{printDate}</p>
             </div>
 
-            {/* Name */}
             <h1 className="text-3xl font-bold text-black mb-6">
               {calcName || "Peptide Dosage Reference"}
             </h1>
 
-            {/* Inputs */}
             <div className="mb-6">
-              <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">
-                Inputs
-              </p>
+              <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">Inputs</p>
               <table className="w-full text-sm">
                 <tbody>
                   {[
-                    ["Bacteriostatic Water", `${waterMl} ml`],
                     ["Vial Peptide Amount", `${vialMg} mg`],
+                    ["Prescribed Dose", `${dose} ${doseUnit}`],
+                    ...(selectedFreq ? [["Frequency", selectedFreq.label]] : []),
                     ["Syringe Type", syringe],
-                    ["Intended Dose", `${dose} ${doseUnit}`],
                   ].map(([label, value]) => (
                     <tr key={label} className="border-b border-gray-100">
                       <td className="py-2 text-gray-500">{label}</td>
@@ -505,22 +580,22 @@ export default function PeptideCalculator() {
               </table>
             </div>
 
-            {/* Result */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-5">
-              <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-2">
-                Result
-              </p>
-              <p className="text-2xl font-bold text-black leading-snug">
-                {results!.summary}
-              </p>
+            <div className="border border-gray-200 rounded-lg overflow-hidden mb-5">
+              <div className="bg-gray-50 px-5 py-4 border-b border-gray-200">
+                <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-1">Step 1 — Reconstitution (once per vial)</p>
+                <p className="text-lg font-bold text-black leading-snug">{results!.reconstitution}</p>
+              </div>
+              <div className="bg-white px-5 py-4">
+                <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-1">Step 2 — Dosing (each injection)</p>
+                <p className="text-lg font-bold text-black leading-snug">{results!.drawInstruction}</p>
+              </div>
             </div>
 
-            {/* Supporting numbers */}
             <div className="grid grid-cols-3 gap-3 text-sm">
               {[
-                ["Concentration", `${results!.concentration.toFixed(4)} mg/ml`],
-                ["Draw Volume", `${results!.volumeMl.toFixed(4)} ml`],
-                ["Syringe Units", `${results!.syringeUnits.toFixed(1)}`],
+                ["Bacteriostatic Water", `${results!.recommendedBW} ml`],
+                ["Doses per Vial", Number.isInteger(results!.totalDoses) ? String(results!.totalDoses) : results!.totalDoses.toFixed(1)],
+                ...(results!.supplyLabel ? [["Supply Duration", results!.supplyLabel]] : [["Concentration", `${results!.concentration.toFixed(2)} mg/ml`]]),
               ].map(([label, value]) => (
                 <div key={label} className="border border-gray-200 rounded-lg px-3 py-2">
                   <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
