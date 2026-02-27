@@ -1,165 +1,9 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
-
-const PEPTIDES = [
-  "5-amino-1MQ",
-  "AOD-9604",
-  "B7-33",
-  "BPC-157",
-  "Bronchogen",
-  "Cardiogen",
-  "Cartalax",
-  "Cerebrolysin",
-  "Chonluten",
-  "CJC-1295 / Ipamorelin",
-  "Cortagen",
-  "Crystagen",
-  "Epitalon",
-  "FOX04-DRI",
-  "GHK-Cu",
-  "Glutathione",
-  "HGH",
-  "Humanin",
-  "IGF-1 LR3",
-  "KPV",
-  "Livagen",
-  "LL-37",
-  "Melanotan 2 (MT2)",
-  "MOTS-c",
-  "NAD+",
-  "Ovagen",
-  "Oxytocin",
-  "P21",
-  "Pancragen",
-  "Pinealon",
-  "Prostamax",
-  "PT-141",
-  "Retatrutide",
-  "Selank",
-  "Semaglutide",
-  "Semax",
-  "SLU-PP-332",
-  "SS-31",
-  "TB-500",
-  "Teriparatide",
-  "Tesamorelin",
-  "Testagen",
-  "Thymalin",
-  "Thymosin Alpha-1",
-  "Tirzepatide",
-  "Vesugen",
-  "Vilon",
-];
-
-const FREQUENCIES: { label: string; dosesPerWeek: number }[] = [
-  { label: "Once daily", dosesPerWeek: 7 },
-  { label: "Twice daily", dosesPerWeek: 14 },
-  { label: "Every other day (EOD)", dosesPerWeek: 3.5 },
-  { label: "3× per week", dosesPerWeek: 3 },
-  { label: "Twice weekly", dosesPerWeek: 2 },
-  { label: "Once weekly", dosesPerWeek: 1 },
-  { label: "Twice monthly", dosesPerWeek: 0.5 },
-  { label: "Once monthly", dosesPerWeek: 0.25 },
-];
-
-const SYRINGE_UNITS: Record<string, number> = {
-  "U-100": 100,
-  "U-50": 50,
-  "U-40": 40,
-};
-
-type DoseUnit = "mcg" | "mg";
-type SyringeType = "U-100" | "U-50" | "U-40";
-
-interface Results {
-  bwUsed: number;
-  bwOverridden: boolean;
-  concentration: number;
-  volumeMl: number;
-  syringeUnits: number;
-  totalDoses: number;
-  supplyLabel: string | null;
-  frequencyLabel: string | null;
-  reconstitution: string;
-  drawInstruction: string;
-  summary: string;
-}
-
-function computeRecommended(
-  vialMg: number,
-  doseMg: number,
-  syringe: SyringeType,
-  dosesPerWeek: number | null,
-  bwOverride: number | null
-): Results | null {
-  if (!vialMg || !doseMg || vialMg <= 0 || doseMg <= 0 || doseMg > vialMg) return null;
-
-  const unitsPerMl = SYRINGE_UNITS[syringe];
-
-  let bwUsed: number;
-  let bwOverridden = false;
-
-  if (bwOverride && bwOverride > 0) {
-    bwUsed = bwOverride;
-    bwOverridden = true;
-  } else {
-    const BW_OPTIONS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5];
-    let bestBW = 2;
-    let bestScore = Infinity;
-    for (const bw of BW_OPTIONS) {
-      const concentration = vialMg / bw;
-      const volumeMl = doseMg / concentration;
-      const units = volumeMl * unitsPerMl;
-      if (units < 2 || units > 100) continue;
-      const score = Math.abs(units - Math.round(units / 5) * 5);
-      if (score < bestScore) {
-        bestScore = score;
-        bestBW = bw;
-      }
-    }
-    bwUsed = bestBW;
-  }
-
-  const concentration = vialMg / bwUsed;
-  const volumeMl = doseMg / concentration;
-  const syringeUnits = volumeMl * unitsPerMl;
-  const totalDoses = vialMg / doseMg;
-
-  let supplyLabel: string | null = null;
-  let frequencyLabel: string | null = null;
-  if (dosesPerWeek) {
-    const match = FREQUENCIES.find((f) => f.dosesPerWeek === dosesPerWeek);
-    frequencyLabel = match?.label ?? null;
-    const totalDays = (totalDoses / dosesPerWeek) * 7;
-    if (totalDays < 14) supplyLabel = `${Math.round(totalDays)} days`;
-    else if (totalDays < 60) supplyLabel = `${Math.round(totalDays / 7)} weeks`;
-    else supplyLabel = `~${(totalDays / 30).toFixed(1)} months`;
-  }
-
-  const unitsDisplay =
-    syringeUnits % 1 === 0 ? syringeUnits.toFixed(0) : syringeUnits.toFixed(1);
-
-  const reconstitution = bwOverridden
-    ? `Your vial was reconstituted with ${bwUsed}ml of bacteriostatic water.`
-    : `Add ${bwUsed}ml of bacteriostatic water to the vial to dissolve the peptide. Do this once when you first open the vial.`;
-  const drawInstruction = `Draw to the ${unitsDisplay} unit mark on your ${syringe} syringe each time you dose.`;
-  const summary = `${reconstitution} ${drawInstruction}`;
-
-  return {
-    bwUsed,
-    bwOverridden,
-    concentration,
-    volumeMl,
-    syringeUnits,
-    totalDoses,
-    supplyLabel,
-    frequencyLabel,
-    reconstitution,
-    drawInstruction,
-    summary,
-  };
-}
+import { PEPTIDES, FREQUENCIES } from "@/lib/constants";
+import { computeRecommended } from "@/lib/calculate";
+import type { DoseUnit, SyringeType } from "@/lib/types";
 
 function PeptideCombobox({
   value,
@@ -303,7 +147,7 @@ function ResultCard({
   );
 }
 
-export default function PeptideCalculator() {
+export function PeptideCalculator() {
   const [calcName, setCalcName] = useState("");
   const [vialMg, setVialMg] = useState("");
   const [dose, setDose] = useState("");
@@ -347,11 +191,6 @@ export default function PeptideCalculator() {
       {/* ── Screen UI ── */}
       <div className="min-h-screen bg-[#060c18] px-5 py-10 sm:py-16 print:hidden">
         <header className="max-w-2xl mx-auto mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-cyan-400 font-mono text-sm tracking-widest uppercase font-semibold">
-              biohack.tools
-            </span>
-          </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-100 tracking-tight leading-tight">
             Peptide Dosage
             <br />

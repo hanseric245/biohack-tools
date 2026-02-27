@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { PortalNav } from "@/components/PortalNav";
+import { FeedbackButton } from "@/components/FeedbackButton";
 
 export const metadata: Metadata = {
-  title: "Peptide Dosage Calculator — biohack.tools",
+  title: "biohack.tools — Peptide Protocol Tools",
   description:
-    "Calculate your exact draw volume for precise peptide dosing. Input vial amount, bacteriostatic water, syringe type, and dose to get syringe unit marks instantly.",
+    "Tools for informed peptide use. Learn, plan your protocol, prepare your order, and track your injections.",
 };
 
 export default function RootLayout({
@@ -14,8 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body>{children}<Analytics /></body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <PortalNav />
+          {children}
+          <FeedbackButton />
+        </ThemeProvider>
+        <Analytics />
+      </body>
     </html>
   );
 }
