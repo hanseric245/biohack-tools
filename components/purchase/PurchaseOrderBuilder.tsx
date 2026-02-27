@@ -60,11 +60,11 @@ const DEFAULT_SUPPLIES: SupplyItem[] = [
   {
     id: "bac-water",
     name: "Bacteriostatic water",
-    detail: "30ml vial — pharmacy or compounding",
+    detail: "10ml vials, 6-pack",
     quantity: 1,
     checked: false,
     recurrence: "recurring",
-    url: null,
+    url: "https://amzn.to/4rS1zRa",
   },
 ];
 
