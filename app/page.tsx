@@ -24,10 +24,10 @@ const MODULES = [
     icon: ShoppingCart,
     label: "Purchase",
     description: "Generate a clean order list — one for your peptide vendor, one for supplies.",
-    cta: "Coming Soon",
+    cta: "Build Order",
     href: "/purchase",
     external: false,
-    available: false,
+    available: true,
   },
   {
     icon: ClipboardList,
