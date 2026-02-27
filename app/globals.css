@@ -66,6 +66,25 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+/* Print: show only the receipt card */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #purchase-receipt,
+  #purchase-receipt * {
+    visibility: visible;
+  }
+  #purchase-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
 /* Custom select arrow */
 select {
   -webkit-appearance: none;
