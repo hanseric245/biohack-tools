@@ -461,7 +461,7 @@ export function PeptideCalculator() {
 
       {/* ── Print card ── */}
       {hasResults && (
-        <div className="hidden print:block p-10 font-sans text-black">
+        <div id="calc-receipt" className="hidden print:block p-10 font-sans text-black">
           <div className="border-2 border-black rounded-xl p-8 max-w-lg mx-auto">
             <div className="flex items-start justify-between mb-6 pb-4 border-b border-gray-300">
               <div>

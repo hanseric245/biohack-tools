@@ -72,10 +72,13 @@ input[type="number"] {
     visibility: hidden;
   }
   #purchase-receipt,
-  #purchase-receipt * {
+  #purchase-receipt *,
+  #calc-receipt,
+  #calc-receipt * {
     visibility: visible;
   }
-  #purchase-receipt {
+  #purchase-receipt,
+  #calc-receipt {
     position: absolute;
     top: 0;
     left: 0;
