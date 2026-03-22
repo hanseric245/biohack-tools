@@ -33,20 +33,20 @@ function PeptideCombobox({
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="e.g. BPC-157 — or type any name"
         className="
-          w-full bg-[#081322] border border-[#1a3050] rounded-xl
-          px-5 py-4 text-slate-100 text-xl
-          placeholder:text-slate-600
+          w-full bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl
+          px-5 py-4 text-slate-900 dark:text-slate-100 text-xl
+          placeholder:text-slate-400 dark:placeholder:text-slate-600
           focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
           transition-colors duration-150
         "
       />
       {open && filtered.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-[#0a1628] border border-[#1e3a5f] rounded-xl overflow-hidden z-50 shadow-2xl max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#0a1628] border border-slate-200 dark:border-[#1e3a5f] rounded-xl overflow-hidden z-50 shadow-2xl max-h-64 overflow-y-auto">
           {filtered.map((p) => (
             <button
               key={p}
               onMouseDown={() => { onChange(p); setOpen(false); }}
-              className="w-full text-left px-5 py-3 text-lg text-slate-300 hover:bg-cyan-400/10 hover:text-cyan-400 transition-colors duration-100 border-b border-[#1a3050] last:border-0"
+              className="w-full text-left px-5 py-3 text-lg text-slate-700 dark:text-slate-300 hover:bg-cyan-400/10 hover:text-cyan-400 transition-colors duration-100 border-b border-slate-100 dark:border-[#1a3050] last:border-0"
             >
               {p}
             </button>
@@ -69,11 +69,11 @@ function Field({
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <span className="text-sm font-semibold tracking-widest text-slate-300 uppercase">
+        <span className="text-sm font-semibold tracking-widest text-slate-700 dark:text-slate-300 uppercase">
           {label}
         </span>
         {hint && (
-          <p className="mt-0.5 text-sm text-slate-500 leading-snug">{hint}</p>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400 leading-snug">{hint}</p>
         )}
       </div>
       {children}
@@ -107,16 +107,16 @@ function NumericInput({
           min="0"
           step="any"
           className="
-            w-full bg-[#081322] border border-[#1a3050] rounded-xl
-            px-5 py-4 text-slate-100 text-xl font-mono
-            placeholder:text-slate-600
+            w-full bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl
+            px-5 py-4 text-slate-900 dark:text-slate-100 text-xl font-mono
+            placeholder:text-slate-400 dark:placeholder:text-slate-600
             focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
             transition-colors duration-150
           "
           style={{ paddingRight: unit ? "3.5rem" : undefined }}
         />
         {unit && (
-          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-base text-slate-500 font-mono pointer-events-none">
+          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-base text-slate-400 dark:text-slate-500 font-mono pointer-events-none">
             {unit}
           </span>
         )}
@@ -135,14 +135,14 @@ function ResultCard({
   sub?: string;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 bg-[#081322] border border-[#1a3050] rounded-xl px-4 py-3">
-      <span className="text-xs font-semibold tracking-widest text-slate-600 uppercase">
+    <div className="flex flex-col gap-0.5 bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl px-4 py-3">
+      <span className="text-xs font-semibold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
         {label}
       </span>
-      <span className="text-lg font-mono font-medium text-slate-400 tracking-tight">
+      <span className="text-lg font-mono font-medium text-slate-700 dark:text-slate-300 tracking-tight">
         {value}
       </span>
-      {sub && <span className="text-xs text-slate-600">{sub}</span>}
+      {sub && <span className="text-xs text-slate-400 dark:text-slate-500">{sub}</span>}
     </div>
   );
 }
@@ -189,27 +189,27 @@ export function PeptideCalculator() {
   return (
     <>
       {/* ── Screen UI ── */}
-      <div className="min-h-screen bg-[#060c18] px-5 py-10 sm:py-16 print:hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#060c18] px-5 py-10 sm:py-16 print:hidden">
         <header className="max-w-2xl mx-auto mb-10">
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-100 tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
             Peptide Dosage
             <br />
             <span className="text-cyan-400">Calculator</span>
           </h1>
-          <p className="mt-4 text-slate-400 text-base sm:text-lg leading-relaxed">
+          <p className="mt-4 text-slate-500 dark:text-slate-400 text-base sm:text-lg leading-relaxed">
             Enter your vial specs and prescribed dose — we&apos;ll tell you exactly
             how to prepare and draw it.
           </p>
         </header>
 
         <main className="max-w-2xl mx-auto">
-          <div className="bg-[#0c1a2e] border border-[#1a3050] rounded-2xl">
+          <div className="bg-white dark:bg-[#0c1a2e] border border-slate-200 dark:border-[#1a3050] rounded-2xl">
             {/* Inputs */}
             <div className="p-6 sm:p-8">
               <div className="flex items-center justify-between mb-7">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-5 bg-cyan-400 rounded-full" />
-                  <h2 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">
+                  <h2 className="text-sm font-semibold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
                     Inputs
                   </h2>
                 </div>
@@ -224,14 +224,14 @@ export function PeptideCalculator() {
                       setSyringe("U-100");
                       setBwOverride("");
                     }}
-                    className="text-slate-600 hover:text-slate-300 transition-colors duration-150 p-1"
+                    className="text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 transition-colors duration-150 p-1"
                     aria-label="Start over"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </button>
-                  <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-[#070f20] border border-[#1e3a5f] rounded text-xs text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                  <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-white dark:bg-[#070f20] border border-slate-200 dark:border-[#1e3a5f] rounded text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
                     Start over
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export function PeptideCalculator() {
                   hint="mcg = micrograms, mg = milligrams. 1mg = 1,000mcg. Most peptide doses are in mcg."
                 >
                   <div className="flex flex-col gap-2">
-                    <div className="flex bg-[#081322] border border-[#1a3050] rounded-xl overflow-hidden self-start">
+                    <div className="flex bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl overflow-hidden self-start">
                       {(["mcg", "mg"] as DoseUnit[]).map((u) => (
                         <button
                           key={u}
@@ -271,7 +271,7 @@ export function PeptideCalculator() {
                             px-5 py-2.5 text-base font-mono font-medium transition-colors duration-150
                             ${doseUnit === u
                               ? "bg-cyan-400/10 text-cyan-400"
-                              : "text-slate-500 hover:text-slate-300"
+                              : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             }
                           `}
                         >
@@ -287,9 +287,9 @@ export function PeptideCalculator() {
                       min="0"
                       step="any"
                       className="
-                        w-full bg-[#081322] border border-[#1a3050] rounded-xl
-                        px-5 py-4 text-slate-100 text-xl font-mono
-                        placeholder:text-slate-600
+                        w-full bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl
+                        px-5 py-4 text-slate-900 dark:text-slate-100 text-xl font-mono
+                        placeholder:text-slate-400 dark:placeholder:text-slate-600
                         focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
                         transition-colors duration-150
                       "
@@ -305,13 +305,13 @@ export function PeptideCalculator() {
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value)}
-                    className="
-                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
+                    className={`
+                      w-full bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl
                       px-5 py-4 text-xl cursor-pointer
                       focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
                       transition-colors duration-150
-                    "
-                    style={{ color: frequency ? "#e2e8f0" : "#475569" }}
+                      ${frequency ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}
+                    `}
                   >
                     <option value="">Select frequency (optional)</option>
                     {FREQUENCIES.map((f) => (
@@ -331,8 +331,8 @@ export function PeptideCalculator() {
                     value={syringe}
                     onChange={(e) => setSyringe(e.target.value as SyringeType)}
                     className="
-                      w-full bg-[#081322] border border-[#1a3050] rounded-xl
-                      px-5 py-4 text-slate-100 text-xl
+                      w-full bg-slate-100 dark:bg-[#081322] border border-slate-200 dark:border-[#1a3050] rounded-xl
+                      px-5 py-4 text-slate-900 dark:text-slate-100 text-xl
                       focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20
                       transition-colors duration-150 cursor-pointer
                     "
@@ -356,25 +356,25 @@ export function PeptideCalculator() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-[#1a3050]" />
+            <div className="border-t border-slate-200 dark:border-[#1a3050]" />
 
             {/* Results */}
             <div className="p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-7">
-                <div className={`w-1 h-5 rounded-full transition-colors duration-300 ${hasResults ? "bg-cyan-400" : "bg-slate-600"}`} />
-                <h2 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">
+                <div className={`w-1 h-5 rounded-full transition-colors duration-300 ${hasResults ? "bg-cyan-400" : "bg-slate-300 dark:bg-slate-600"}`} />
+                <h2 className="text-sm font-semibold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
                   Results
                 </h2>
               </div>
 
               {!hasResults ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-3">
-                  <div className="w-12 h-12 rounded-full border-2 border-[#1a3050] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 rounded-full border-2 border-slate-200 dark:border-[#1a3050] flex items-center justify-center">
+                    <svg className="w-6 h-6 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="text-slate-500 text-base">Fill in vial amount and dose to calculate</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-base">Fill in vial amount and dose to calculate</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -436,8 +436,8 @@ export function PeptideCalculator() {
                     }}
                     className="
                       mt-2 w-full flex items-center justify-center gap-2
-                      border border-slate-600 hover:border-cyan-400 hover:text-cyan-400
-                      text-slate-400 text-base font-medium rounded-xl px-5 py-3.5
+                      border border-slate-300 dark:border-slate-600 hover:border-cyan-400 hover:text-cyan-400
+                      text-slate-500 dark:text-slate-400 text-base font-medium rounded-xl px-5 py-3.5
                       transition-colors duration-150
                     "
                   >
@@ -451,11 +451,11 @@ export function PeptideCalculator() {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-600 leading-relaxed px-4">
+          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-600 leading-relaxed px-4">
             For informational purposes only. Always verify calculations before use.
             Consult a healthcare professional for medical guidance.
           </p>
-          <p className="mt-2 text-center text-xs text-slate-700">v1.4.0</p>
+          <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-700">v1.4.0</p>
         </main>
       </div>
 
