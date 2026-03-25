@@ -383,16 +383,16 @@ export function PeptideCalculator() {
                     <div className="flex gap-3 items-start">
                       <span className="mt-1 shrink-0 w-6 h-6 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-xs font-bold">1</span>
                       <div>
-                        <p className="text-xs font-semibold tracking-widest text-cyan-400/70 uppercase mb-1">Reconstitution — once per vial</p>
-                        <p className="text-cyan-100 text-xl leading-snug font-bold">{results.reconstitution}</p>
+                        <p className="text-xs font-semibold tracking-widest text-cyan-600 dark:text-cyan-400/70 uppercase mb-1">Reconstitution — once per vial</p>
+                        <p className="text-cyan-900 dark:text-cyan-100 text-xl leading-snug font-bold">{results.reconstitution}</p>
                       </div>
                     </div>
                     <div className="border-t border-cyan-400/20" />
                     <div className="flex gap-3 items-start">
                       <span className="mt-1 shrink-0 w-6 h-6 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-xs font-bold">2</span>
                       <div>
-                        <p className="text-xs font-semibold tracking-widest text-cyan-400/70 uppercase mb-1">Dosing — each time you inject</p>
-                        <p className="text-cyan-100 text-xl leading-snug font-bold">{results.drawInstruction}</p>
+                        <p className="text-xs font-semibold tracking-widest text-cyan-600 dark:text-cyan-400/70 uppercase mb-1">Dosing — each time you inject</p>
+                        <p className="text-cyan-900 dark:text-cyan-100 text-xl leading-snug font-bold">{results.drawInstruction}</p>
                       </div>
                     </div>
                   </div>
